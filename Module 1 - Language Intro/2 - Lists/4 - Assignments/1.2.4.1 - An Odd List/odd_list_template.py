@@ -20,6 +20,7 @@ YOUR CODE BEGINS BELOW HERE. FILL IN THE MISSING OPERATIONS / CODE
 """
 
 # use len() to find the length of the list
+<<<<<<< HEAD
 list_length = len(odd_list) #modify this line to perform the correct operation
 
 # now calculate the middle index of the list
@@ -27,6 +28,15 @@ middle_index = list_length // 2 #modify this line to perform the correct operati
 
 # use [] to access the middle element. Set it equal to middle_element
 middle_element = odd_list[middle_index] #modify this line to perform the correct operation
+=======
+list_length = len(odd_list)
+
+# now calculate the middle index of the list
+middle_index = list_length // 2
+
+# use [] to access the middle element. Set it equal to middle_element
+middle_element = odd_list[middle_index]
+>>>>>>> caac15d26a1fc7e6271754a900054b24967e1df3
 
 # print out the middle_element
 print("The middle element is: ", middle_element)

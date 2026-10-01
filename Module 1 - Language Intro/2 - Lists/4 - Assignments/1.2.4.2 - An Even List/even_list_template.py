@@ -20,11 +20,22 @@ print("Your list is: ", even_list)
 YOUR CODE BEGINS BELOW HERE. FILL IN THE MISSING OPERATIONS / CODE
 """
 
+<<<<<<< HEAD
 # this is the final result. Modify this line, and the empty lines above, to solve the assignment
 middle_average_start = even_list[len(even_list) // 2]
 right_middle_average = even_list[len(even_list) // 2]
 left_middle_average = even_list[len(even_list) // 2 - 1]
 middle_average = (left_middle_average + right_middle_average) / 2
+=======
+list_length = len(even_list)
+right_middle_index = list_length // 2
+
+left_middle_element = even_list[right_middle_index - 1]
+right_middle_element = even_list[right_middle_index]
+
+# this is the final result. Modify this line, and the empty lines above, to solve the assignment
+middle_average = (left_middle_element + right_middle_element) / 2
+>>>>>>> caac15d26a1fc7e6271754a900054b24967e1df3
 
 # the average of middle elements is
 print("The average is: ", middle_average)
