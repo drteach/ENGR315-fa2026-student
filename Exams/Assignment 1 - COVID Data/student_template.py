@@ -1,5 +1,6 @@
 import sys
 
+
 """
 Create a program which will provide answers to the questions posed in the assignment description.
 We've provided a function which will parse the NYT covid database file (named "us-counties.csv"); 
@@ -68,3 +69,93 @@ def parse_nyt_data(file_path=''):
     return data
 
 ### YOUR CODE HERE ###
+
+data = parse_nyt_data('data/covid/us-counties.csv')
+
+print('===== Harrisonburg city =====')
+
+rows = []
+for entry in data:
+    if entry[1] == 'Harrisonburg city' and entry[2] == 'Virginia':
+        rows.append((entry[0], entry[4]))
+
+# Question 1
+for date, cases in rows:
+    if cases > 0:
+        print('First case:', date)
+        break
+
+# Daily new cases
+daily = []
+previous = 0
+for date, cases in rows:
+    daily.append((date, cases - previous))
+    previous = cases
+
+# Question 2
+best_date = ''
+best_cases = -1
+for date, new_cases in daily:
+    if new_cases > best_cases:
+        best_cases = new_cases
+        best_date = date
+print('Most new cases in one day:', best_date, 'with', best_cases)
+
+# Question 3
+best_total = -1
+best_start = ''
+best_end = ''
+for i in range(len(daily) - 6):
+    total = 0
+    for j in range(i, i + 7):
+        total = total + daily[j][1]
+    if total > best_total:
+        best_total = total
+        best_start = daily[i][0]
+        best_end = daily[i + 6][0]
+print('Worst 7-day period:', best_start, 'to', best_end, 'with', best_total, 'new cases')
+
+print()
+
+print('===== Rockingham County =====')
+
+rows = []
+for entry in data:
+    if entry[1] == 'Rockingham' and entry[2] == 'Virginia':
+        rows.append((entry[0], entry[4]))
+
+# Question 1
+for date, cases in rows:
+    if cases > 0:
+        print('First case:', date)
+        break
+
+# Daily new cases
+daily = []
+previous = 0
+for date, cases in rows:
+    daily.append((date, cases - previous))
+    previous = cases
+
+# Question 2
+best_date = ''
+best_cases = -1
+for date, new_cases in daily:
+    if new_cases > best_cases:
+        best_cases = new_cases
+        best_date = date
+print('Most new cases in one day:', best_date, 'with', best_cases)
+
+# Question 3
+best_total = -1
+best_start = ''
+best_end = ''
+for i in range(len(daily) - 6):
+    total = 0
+    for j in range(i, i + 7):
+        total = total + daily[j][1]
+    if total > best_total:
+        best_total = total
+        best_start = daily[i][0]
+        best_end = daily[i + 6][0]
+print('Worst 7-day period:', best_start, 'to', best_end, 'with', best_total, 'new cases')
