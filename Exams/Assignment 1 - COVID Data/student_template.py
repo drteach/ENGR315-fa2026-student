@@ -68,3 +68,49 @@ def parse_nyt_data(file_path=''):
     return data
 
 ### YOUR CODE HERE ###
+
+data = parse_nyt_data("data/covid/us-counties.csv")
+
+
+harrisonburg_first_date = ""
+rockingham_first_date = ""
+
+for record in data:
+    date, county, state, fips, cases, deaths = record
+
+    if state == "Virginia" and cases > 0:
+        if county == "Harrisonburg city" and harrisonburg_first_date == "":
+            harrisonburg_first_date = date
+
+        if county == "Rockingham" and rockingham_first_date == "":
+            rockingham_first_date = date
+
+print("First positive case in Harrisonburg:", harrisonburg_first_date)
+print("First positive case in Rockingham County:", rockingham_first_date)
+
+previous_harrisonburg_cases = 0
+previous_rockingham_cases = 0
+most_harrisonburg_new_cases = -1
+most_rockingham_new_cases = -1
+harrisonburg_max_date = ""
+rockingham_max_date = ""
+
+for record in data:
+    date, county, state, fips, cases, deaths = record
+
+    if state == "Virginia" and county == "Harrisonburg city":
+        new_cases = cases - previous_harrisonburg_cases
+        if new_cases > most_harrisonburg_new_cases:
+            most_harrisonburg_new_cases = new_cases
+            harrisonburg_max_date = date
+        previous_harrisonburg_cases = cases
+
+    if state == "Virginia" and county == "Rockingham":
+        new_cases = cases - previous_rockingham_cases
+        if new_cases > most_rockingham_new_cases:
+            most_rockingham_new_cases = new_cases
+            rockingham_max_date = date
+        previous_rockingham_cases = cases
+
+print("Date with the most new cases in Harrisonburg:", harrisonburg_max_date)
+print("Date with the most new cases in Rockingham County:", rockingham_max_date)
