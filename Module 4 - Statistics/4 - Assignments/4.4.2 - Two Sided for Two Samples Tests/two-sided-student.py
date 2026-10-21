@@ -48,7 +48,14 @@ def two_sided_tests(_files1: list, _files2: list, _alpha: float):
     # list of file pairs where the null hypothesis is rejected
     reject_null_hypothesis = []
 
-    # YOUR CODE HERE #
+    for i in range(len(_files1)):
+        sample1 = np.loadtxt(_files1[i])
+        sample2 = np.loadtxt(_files2[i])
+
+        result = ttest_ind(sample1, sample2, equal_var=False)
+
+        if result.pvalue < _alpha:
+            reject_null_hypothesis.append((_files1[i], _files2[i]))
 
     # return file pairs that were rejected
     return reject_null_hypothesis
