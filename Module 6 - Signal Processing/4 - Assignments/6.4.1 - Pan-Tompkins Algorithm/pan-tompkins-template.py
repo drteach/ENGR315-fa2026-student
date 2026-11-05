@@ -11,40 +11,40 @@ def detect_heartbeats(filepath):
     if filepath == '':
         return list()
 
-    # import the CSV file using numpy
     path = filepath
 
-    # load data in matrix from CSV file; skip first two rows
-    ## your code here
+    data = np.loadtxt(path, delimiter=',', skiprows=2)
+    signal = data[:, 1]
 
-    # save each vector as own variable
-    ## your code here
+    def moving_average(values, window_size):
+        cumulative = np.cumsum(np.insert(values, 0, 0.0))
+        averaged = (cumulative[window_size:] - cumulative[:-window_size]) / window_size
+        padding = (window_size - 1) // 2
+        return np.pad(averaged, (padding, len(values) - len(averaged) - padding), mode='edge')
 
-    # identify one column to process. Call that column signal
+    signal = signal - moving_average(signal, 361)
+    derivative = np.diff(signal, prepend=signal[0])
+    signal = moving_average(derivative ** 2, 54)
 
-    signal = -1 ## your code here
+    candidate_peaks = np.where(
+        (signal[1:-1] >= signal[:-2]) & (signal[1:-1] > signal[2:])
+    )[0] + 1
 
-    # pass data through LOW PASS FILTER (OPTIONAL)
-    ## your code here
+    if len(candidate_peaks) == 0:
+        beats = np.array([], dtype=int)
+    else:
+        threshold = np.percentile(signal[candidate_peaks], 80)
+        candidate_peaks = candidate_peaks[signal[candidate_peaks] >= threshold]
+        candidate_peaks = candidate_peaks[np.argsort(signal[candidate_peaks])[::-1]]
 
-    # pass data through HIGH PASS FILTER (OPTIONAL) to create BAND PASS result
-    ## your code here
+        selected_peaks = []
+        blocked = np.zeros(len(signal), dtype=bool)
+        for peak in candidate_peaks:
+            if not blocked[peak]:
+                selected_peaks.append(peak)
+                blocked[max(0, peak - 190):peak + 191] = True
 
-    # pass data through differentiator
-    ## your code here
-
-    # pass data through square function
-    ## your code here
-
-    # pass through moving average window
-    ## your code here
-
-    # use find_peaks to identify peaks within averaged/filtered data
-    # save the peaks result and return as part of testbench result
-
-    ## your code here peaks,_ = find_peaks(....)
-
-    beats = None
+        beats = np.sort(np.asarray(selected_peaks, dtype=int))
 
     # do not modify this line
     return signal, beats
