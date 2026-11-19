@@ -15,14 +15,14 @@ def residuals(dimensions):
     f1(x, y) = x**2 + y**2 - 41
     f2(x, y) = x + y - 9
     """
-    # TODO (20 points): implement the nonlinear equations.
-    return None
+    x, y = dimensions
+    return np.array([x**2 + y**2 - 41.0, x + y - 9.0])
 
 
 def jacobian(dimensions):
     """Return a NumPy array of shape (2, 2) containing the Jacobian."""
-    # TODO (20 points): implement the Jacobian matrix.
-    return None
+    x, y = dimensions
+    return np.array([[2.0 * x, 2.0 * y], [1.0, 1.0]])
 
 
 def newton_raphson(initial_guess, tolerance=1e-6, max_iterations=50):
@@ -32,8 +32,21 @@ def newton_raphson(initial_guess, tolerance=1e-6, max_iterations=50):
     absolute residual is strictly smaller than tolerance. If the solver
     does not converge within max_iterations, raise RuntimeError.
     """
-    # TODO (40 points): implement the iterative Newton-Raphson algorithm.
-    return None
+    dimensions = np.array(initial_guess, dtype=float)
+
+    for _ in range(max_iterations):
+        residual = residuals(dimensions)
+        if np.max(np.abs(residual)) < tolerance:
+            return dimensions
+
+        dimensions = dimensions + np.linalg.solve(
+            jacobian(dimensions), -residual
+        )
+
+    residual = residuals(dimensions)
+    if np.max(np.abs(residual)) < tolerance:
+        return dimensions
+    raise RuntimeError("Newton-Raphson method did not converge")
 
 
 def solve_scipy(initial_guess):
@@ -41,8 +54,10 @@ def solve_scipy(initial_guess):
 
     Check solution.success. Raise RuntimeError if the solver fails.
     """
-    # TODO (20 points): use root() to solve the system.
-    return None
+    solution = root(residuals, initial_guess)
+    if not solution.success:
+        raise RuntimeError("SciPy root solver failed")
+    return np.array(solution.x)
 
 
 if __name__ == "__main__":
