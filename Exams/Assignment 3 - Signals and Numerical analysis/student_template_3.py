@@ -18,12 +18,14 @@ See Canvas for additional requirements.
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
+import os
 
 
 # Read the note names and frequencies from the reference file.
 note_names = []
 note_frequencies = []
-reference_file = open(r"..\..\data\musical-notes\note-frequencies-reference.csv")
+data_dir = os.path.join("..", "..", "data", "musical-notes")
+reference_file = open(os.path.join(data_dir, "note-frequencies-reference.csv"))
 reference_lines = reference_file.readlines()
 reference_file.close()
 
@@ -44,18 +46,21 @@ file_names = [
 print("File name           Frequency (Hz)   Note")
 
 for file_name in file_names:
-    sample_rate, audio = wavfile.read(r"..\..\data\musical-notes\\" + file_name)
+    sample_rate, audio = wavfile.read(os.path.join(data_dir, file_name))
 
     # These supplied recordings are mono. Remove the average value.
     original_audio = audio
     audio = audio - np.mean(audio)
 
     # Compare the signal with delayed copies to find its repeating period.
+    # Using a section from the middle of the recording: it skips the pluck at the start and the quiet decay at the end.
     section_start = len(audio) // 3
     section = audio[section_start:section_start + 5000]
     scores = []
     lags = []
 
+
+    # Lags of 10 to 1600 samples cover about 27 Hz to 4400 Hz at 44.1 kHz.
     for lag in range(10, 1601):
         first_part = section[:-lag]
         second_part = section[lag:]
@@ -65,6 +70,8 @@ for file_name in file_names:
         scores.append(score)
         lags.append(lag)
 
+
+    # Take the FIRST strong peak, not the highest, so we get the fundamental period instead of a multiple of it.
     threshold = 0.85 * max(scores)
     best_lag = lags[0]
     for i in range(1, len(scores) - 1):
@@ -84,38 +91,40 @@ for file_name in file_names:
     note = note_names[note_index]
     print(file_name, round(frequency, 2), note)
 
-    if file_name == "Guitar-note-1.wav":
-        time = np.arange(len(original_audio)) / sample_rate
+    # Name used for plot titles and saved image files.
+    base_name = file_name.replace(".wav", "")
+    time = np.arange(len(original_audio)) / sample_rate
 
-        # Task 1: plot the complete recording.
-        plt.figure()
-        plt.plot(time, original_audio, label="Original audio")
-        plt.xlabel("Time (seconds)")
-        plt.ylabel("Amplitude")
-        plt.title("Guitar-note-1: Full Audio Signal")
-        plt.legend()
+    # Task 1: plot the complete recording.
+    plt.figure()
+    plt.plot(time, original_audio, label="Original audio")
+    plt.xlabel("Time (seconds)")
+    plt.ylabel("Amplitude")
+    plt.title(base_name + ": Full Audio Signal")
+    plt.legend()
+    plt.savefig(base_name + "-full.png")
 
-        plt.savefig("Guitar-note-1-full.png")
+    # Task 2: show five periods, starting where the period was measured.
+    # The window length comes from the detected period (best_lag), so it
+    # adapts to any note.
+    start = section_start
+    stop = section_start + 5 * best_lag
+    detail_time = np.arange(start, stop) / sample_rate * 1000
 
-        # Smooth the signal with a moving average.
-        # # This sample range shows about five periods of Guitar-note-1.
-        start = 4000
-        stop = 4700
-        detail_time = np.arange(start, stop) / sample_rate * 1000
+    # Smooth the plotted region with a 15-sample moving average.
+    # The original (not mean-removed) audio is smoothed so both lines match.
+    processed = []
+    for i in range(start, stop):
+        samples = original_audio[i - 7 : i + 8]
+        processed.append(np.mean(samples))
 
-        # Smooth only the plotted region with a moving average.
-        processed = []
-        for i in range(start, stop):
-            samples = audio[i - 7 : i + 8]
-            processed.append(np.mean(samples))
-
-        plt.figure()
-        plt.plot(detail_time, original_audio[start:stop], label="Original audio")
-        plt.plot(detail_time, processed, label="Processed audio")
-        plt.xlabel("Time (milliseconds)")
-        plt.ylabel("Amplitude")
-        plt.title("Guitar-note-1: Five Periods")
-        plt.legend()
-        plt.savefig("Guitar-note-1-periods.png")
+    plt.figure()
+    plt.plot(detail_time, original_audio[start:stop], label="Original audio")
+    plt.plot(detail_time, processed, label="Processed audio")
+    plt.xlabel("Time (milliseconds)")
+    plt.ylabel("Amplitude")
+    plt.title(base_name + ": Five Periods")
+    plt.legend()
+    plt.savefig(base_name + "-periods.png")
 
 plt.show()
