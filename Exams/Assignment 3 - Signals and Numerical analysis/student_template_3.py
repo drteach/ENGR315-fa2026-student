@@ -15,6 +15,11 @@ must be enabled in File > Preferences > Settings.
 See Canvas for additional requirements.
 """
 
+# This program detects the musical note in each guitar recording.
+# For every file it (1) plots the full signal, (2) plots five periods of the
+# original and smoothed signal, and (3) finds the main frequency using
+# autocorrelation and matches it to the closest note in the reference table.
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
@@ -29,6 +34,9 @@ reference_file = open(os.path.join(data_dir, "note-frequencies-reference.csv"))
 reference_lines = reference_file.readlines()
 reference_file.close()
 
+
+# Skipping the first two lines (column names and units). Each remaining line is "note name,frequency",
+# so split on the comma and store each part in its own list. Both lists share the same index.
 for line in reference_lines[2:]:
     values = line.strip().split(",")
     note_names.append(values[0])
@@ -43,18 +51,21 @@ file_names = [
     "Guitar-note-5.wav",
 ]
 
-print("File name           Frequency (Hz)   Note")
+print("File name       Frequency (Hz)   Note")
 
 for file_name in file_names:
     sample_rate, audio = wavfile.read(os.path.join(data_dir, file_name))
 
-    # These supplied recordings are mono. Remove the average value.
+    # Keeping the original signal for plotting, then subtract the mean so the
+    # signal oscillates around zero.
     original_audio = audio
     audio = audio - np.mean(audio)
 
     # Compare the signal with delayed copies to find its repeating period.
     # Using a section from the middle of the recording: it skips the pluck at the start and the quiet decay at the end.
     section_start = len(audio) // 3
+    # 5000 samples (about 0.11 s) is long enough to contain many periods of
+    # any note in the lag range below.
     section = audio[section_start:section_start + 5000]
     scores = []
     lags = []
@@ -64,6 +75,9 @@ for file_name in file_names:
     for lag in range(10, 1601):
         first_part = section[:-lag]
         second_part = section[lag:]
+        # Normalized correlation between the signal and a copy delayed by "lag"
+        # samples. Dividing by the energy of both parts keeps the score between
+        # -1 and 1, so it does not depend on how loud the recording is.
         score = np.sum(first_part * second_part) / (
             np.sum(first_part * first_part) * np.sum(second_part * second_part)
         ) ** 0.5
@@ -79,9 +93,11 @@ for file_name in file_names:
             best_lag = lags[i]
             break
 
+    # One period lasts best_lag samples, so frequency = sample rate / period.   
     frequency = sample_rate / best_lag
 
-    # Match the detected frequency to the closest note in the reference.
+    # Find the reference note with the smallest difference from the detected
+    # frequency. note_index keeps the position of the best match so far.
     note_index = 0
     for i in range(len(note_frequencies)):
         if abs(note_frequencies[i] - frequency) < abs(
@@ -93,6 +109,7 @@ for file_name in file_names:
 
     # Name used for plot titles and saved image files.
     base_name = file_name.replace(".wav", "")
+    # Convert sample numbers to seconds by dividing by the sample rate.
     time = np.arange(len(original_audio)) / sample_rate
 
     # Task 1: plot the complete recording.
@@ -111,8 +128,10 @@ for file_name in file_names:
     stop = section_start + 5 * best_lag
     detail_time = np.arange(start, stop) / sample_rate * 1000
 
-    # Smooth the plotted region with a 15-sample moving average.
-    # The original (not mean-removed) audio is smoothed so both lines match.
+    # Smooth the plotted region with a 15-sample moving average (the sample,
+    # 7 before it and 7 after it). This low-pass filter removes fast noise but
+    # keeps the shape of each period. Used for the plot only; detection uses
+    # autocorrelation on the mean-removed signal.
     processed = []
     for i in range(start, stop):
         samples = original_audio[i - 7 : i + 8]
